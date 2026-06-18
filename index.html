@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rangkuman Penjualan & Stok</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --hijau: #10b981;
+    --hijau-muda: #d1fae5;
+    --hijau-gelap: #065f46;
+    --emas: #f59e0b;
+    --emas-muda: #fef3c7;
+    --bg: #f0fdf4;
+    --putih: #ffffff;
+    --abu: #6b7280;
+    --abu-muda: #f3f4f6;
+    --merah: #ef4444;
+    --teks: #111827;
+    --batas: #d1d5db;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg);
+    color: var(--teks);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  header {
+    background: linear-gradient(135deg, var(--hijau-gelap) 0%, #047857 100%);
+    color: white;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  header .ikon { font-size: 28px; }
+  header h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+  header p { font-size: 12px; opacity: 0.75; margin-top: 2px; }
+
+  .kontainer { max-width: 700px; margin: 0 auto; padding: 20px 16px 60px; }
+
+  /* TABS */
+  .tab-nav {
+    display: flex;
+    background: var(--putih);
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+    margin-bottom: 20px;
+    border: 1px solid var(--batas);
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px 8px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--abu);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab-btn.aktif {
+    background: var(--hijau);
+    color: white;
+  }
+
+  .tab-konten { display: none; }
+  .tab-konten.aktif { display: block; }
+
+  /* KARTU */
+  .kartu {
+    background: var(--putih);
+    border-radius: 14px;
+    border: 1px solid var(--batas);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .kartu-judul {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--hijau-gelap);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--hijau-muda);
+  }
+
+  /* FORM */
+  .baris-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .baris-form.satu { grid-template-columns: 1fr; }
+  .baris-form.tiga { grid-template-columns: 1fr 1fr 1fr; }
+
+  .grup-input label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--abu);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .grup-input input, .grup-input select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--batas);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--teks);
+    background: var(--putih);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .grup-input input:focus, .grup-input select:focus {
+    border-color: var(--hijau);
+  }
+
+  /* BUTTONS */
+  .tombol {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 11px 20px;
+    border: none;
+    border-radius: 9px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tombol-hijau { background: var(--hijau); color: white; width: 100%; justify-content: center; }
+  .tombol-hijau:hover { background: var(--hijau-gelap); }
+  .tombol-emas { background: var(--emas); color: white; }
+  .tombol-emas:hover { background: #d97706; }
+  .tombol-merah { background: #fee2e2; color: var(--merah); }
+  .tombol-abu { background: var(--abu-muda); color: var(--abu); }
+
+  /* TABEL PRODUK */
+  .tabel-wrap { overflow-x: auto; margin-top: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    background: var(--hijau-muda);
+    color: var(--hijau-gelap);
+    font-weight: 700;
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  td { padding: 9px 10px; border-bottom: 1px solid var(--abu-muda); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f9fafb; }
+  .badge-stok {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .badge-aman { background: var(--hijau-muda); color: var(--hijau-gelap); }
+  .badge-rendah { background: var(--emas-muda); color: #92400e; }
+  .badge-habis { background: #fee2e2; color: var(--merah); }
+
+  /* LAPORAN */
+  .lap-header {
+    background: linear-gradient(135deg, var(--hijau-gelap), #047857);
+    color: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .lap-header h2 { font-size: 16px; font-weight: 700; }
+  .lap-header p { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+
+  .grid-stat { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .stat-box {
+    background: var(--putih);
+    border-radius: 12px;
+    padding: 14px;
+    border: 1px solid var(--batas);
+    text-align: center;
+  }
+  .stat-box .angka {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--hijau-gelap);
+  }
+  .stat-box .label { font-size: 11px; color: var(--abu); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .stat-box.emas .angka { color: #92400e; }
+  .stat-box.merah .angka { color: var(--merah); }
+
+  .lap-seksi {
+    background: var(--putih);
+    border-radius: 12px;
+    border: 1px solid var(--batas);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .lap-seksi-judul {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--hijau-gelap);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .lap-baris {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px dashed var(--abu-muda);
+    font-size: 13px;
+  }
+  .lap-baris:last-child { border-bottom: none; }
+  .lap-baris .nama { color: var(--teks); }
+  .lap-baris .nilai {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    color: var(--hijau-gelap);
+  }
+  .lap-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: var(--hijau-muda);
+    border-radius: 8px;
+    font-weight: 700;
+  }
+  .lap-total .nilai {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    color: var(--hijau-gelap);
+  }
+
+  .kosong {
+    text-align: center;
+    padding: 32px 20px;
+    color: var(--abu);
+    font-size: 13px;
+  }
+  .kosong .ikon { font-size: 32px; margin-bottom: 8px; }
+
+  .notif {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    display: none;
+  }
+  .notif.hijau { background: var(--hijau-muda); color: var(--hijau-gelap); display: block; }
+  .notif.merah { background: #fee2e2; color: var(--merah); display: block; }
+
+  .aksi-btn { display: flex; gap: 6px; }
+
+  .info-tanggal {
+    font-size: 11px;
+    color: var(--abu);
+    font-family: 'JetBrains Mono', monospace;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="ikon">📊</div>
+  <div>
+    <h1>Rangkuman Penjualan & Stok</h1>
+    <p>Input manual — laporan otomatis</p>
+  </div>
+</header>
+
+<div class="kontainer">
+
+  <div class="tab-nav">
+    <button class="tab-btn aktif" onclick="ganti('produk')">📦 Produk & Stok</button>
+    <button class="tab-btn" onclick="ganti('penjualan')">🧾 Penjualan</button>
+    <button class="tab-btn" onclick="ganti('laporan')">📋 Laporan</button>
+  </div>
+
+  <!-- TAB PRODUK -->
+  <div id="tab-produk" class="tab-konten aktif">
+    <div class="kartu">
+      <div class="kartu-judul">➕ Tambah Produk</div>
+      <div id="notif-produk" class="notif"></div>
+      <div class="baris-form">
+        <div class="grup-input">
+          <label>Nama Produk</label>
+          <input type="text" id="np-nama" placeholder="Mis: Flashing Nok Premium">
+        </div>
+        <div class="grup-input">
+          <label>Kode / SKU</label>
+          <input type="text" id="np-kode" placeholder="Mis: FN-001">
+        </div>
+      </div>
+      <div class="baris-form tiga">
+        <div class="grup-input">
+          <label>Stok Awal</label>
+          <input type="number" id="np-stok" placeholder="0" min="0">
+        </div>
+        <div class="grup-input">
+          <label>Harga Jual (Rp)</label>
+          <input type="number" id="np-harga" placeholder="0" min="0">
+        </div>
+        <div class="grup-input">
+          <label>Min. Stok Aman</label>
+          <input type="number" id="np-min" placeholder="5" min="0">
+        </div>
+      </div>
+      <button class="tombol tombol-hijau" onclick="tambahProduk()">➕ Tambah Produk</button>
+    </div>
+
+    <div class="kartu">
+      <div class="kartu-judul">📦 Daftar Produk</div>
+      <div class="tabel-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Produk</th>
+              <th>Stok</th>
+              <th>Harga</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tabel-produk">
+            <tr><td colspan="5" class="kosong"><div class="ikon">📦</div>Belum ada produk</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB PENJUALAN -->
+  <div id="tab-penjualan" class="tab-konten">
+    <div class="kartu">
+      <div class="kartu-judul">🧾 Catat Penjualan</div>
+      <div id="notif-jual" class="notif"></div>
+      <div class="baris-form">
+        <div class="grup-input">
+          <label>Produk</label>
+          <select id="jl-produk">
+            <option value="">— Pilih produk —</option>
+          </select>
+        </div>
+        <div class="grup-input">
+          <label>Channel</label>
+          <select id="jl-channel">
+            <option value="WhatsApp">WhatsApp</option>
+            <option value="Shopee">Shopee</option>
+            <option value="Tokopedia">Tokopedia</option>
+            <option value="TikTok Shop">TikTok Shop</option>
+            <option value="Langsung">Langsung</option>
+          </select>
+        </div>
+      </div>
+      <div class="baris-form tiga">
+        <div class="grup-input">
+          <label>Jumlah</label>
+          <input type="number" id="jl-qty" placeholder="1" min="1" value="1">
+        </div>
+        <div class="grup-input">
+          <label>Harga Jual (Rp)</label>
+          <input type="number" id="jl-harga" placeholder="0">
+        </div>
+        <div class="grup-input">
+          <label>Tanggal</label>
+          <input type="date" id="jl-tanggal">
+        </div>
+      </div>
+      <div class="baris-form satu">
+        <div class="grup-input">
+          <label>Catatan (opsional)</label>
+          <input type="text" id="jl-catatan" placeholder="Mis: DP lunas, kirim via JNE">
+        </div>
+      </div>
+      <button class="tombol tombol-hijau" onclick="tambahPenjualan()">✅ Catat Penjualan</button>
+    </div>
+
+    <div class="kartu">
+      <div class="kartu-judul">📜 Riwayat Penjualan</div>
+      <div class="tabel-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Produk</th>
+              <th>Qty</th>
+              <th>Total</th>
+              <th>Channel</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tabel-jual">
+            <tr><td colspan="6" class="kosong"><div class="ikon">🧾</div>Belum ada penjualan</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB LAPORAN -->
+  <div id="tab-laporan" class="tab-konten">
+    <div id="konten-laporan">
+      <div class="kosong" style="padding:60px 20px">
+        <div class="ikon">📋</div>
+        <p>Tambah produk dan penjualan dulu,<br>lalu laporan otomatis muncul di sini.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let produk = JSON.parse(localStorage.getItem('tj_produk') || '[]');
+let penjualan = JSON.parse(localStorage.getItem('tj_penjualan') || '[]');
+
+// Set tanggal hari ini
+document.getElementById('jl-tanggal').valueAsDate = new Date();
+
+function simpan() {
+  localStorage.setItem('tj_produk', JSON.stringify(produk));
+  localStorage.setItem('tj_penjualan', JSON.stringify(penjualan));
+}
+
+function ganti(tab) {
+  document.querySelectorAll('.tab-konten').forEach(el => el.classList.remove('aktif'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('aktif'));
+  document.getElementById('tab-' + tab).classList.add('aktif');
+  event.target.classList.add('aktif');
+  if (tab === 'laporan') renderLaporan();
+}
+
+function tampilNotif(id, pesan, tipe) {
+  const el = document.getElementById(id);
+  el.className = 'notif ' + tipe;
+  el.textContent = pesan;
+  setTimeout(() => { el.className = 'notif'; }, 3000);
+}
+
+function formatRp(n) {
+  return 'Rp ' + Number(n).toLocaleString('id-ID');
+}
+
+// ===== PRODUK =====
+function tambahProduk() {
+  const nama = document.getElementById('np-nama').value.trim();
+  const kode = document.getElementById('np-kode').value.trim();
+  const stok = parseInt(document.getElementById('np-stok').value) || 0;
+  const harga = parseInt(document.getElementById('np-harga').value) || 0;
+  const min = parseInt(document.getElementById('np-min').value) || 5;
+
+  if (!nama) return tampilNotif('notif-produk', '⚠️ Nama produk wajib diisi!', 'merah');
+
+  produk.push({ id: Date.now(), nama, kode, stok, harga, min });
+  simpan();
+  renderProduk();
+  updateDropdownProduk();
+  tampilNotif('notif-produk', '✅ Produk berhasil ditambahkan!', 'hijau');
+
+  // Reset
+  ['np-nama','np-kode','np-stok','np-harga','np-min'].forEach(id => document.getElementById(id).value = '');
+}
+
+function hapusProduk(id) {
+  if (!confirm('Hapus produk ini?')) return;
+  produk = produk.filter(p => p.id !== id);
+  simpan();
+  renderProduk();
+  updateDropdownProduk();
+}
+
+function statusStok(p) {
+  if (p.stok === 0) return '<span class="badge-stok badge-habis">HABIS</span>';
+  if (p.stok <= p.min) return '<span class="badge-stok badge-rendah">RENDAH</span>';
+  return '<span class="badge-stok badge-aman">AMAN</span>';
+}
+
+function renderProduk() {
+  const tbody = document.getElementById('tabel-produk');
+  if (!produk.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="kosong"><div class="ikon">📦</div>Belum ada produk</td></tr>';
+    return;
+  }
+  tbody.innerHTML = produk.map(p => `
+    <tr>
+      <td><strong>${p.nama}</strong><br><span class="info-tanggal">${p.kode || '-'}</span></td>
+      <td><strong>${p.stok}</strong></td>
+      <td>${formatRp(p.harga)}</td>
+      <td>${statusStok(p)}</td>
+      <td><button class="tombol tombol-merah" style="padding:4px 10px;font-size:11px" onclick="hapusProduk(${p.id})">🗑</button></td>
+    </tr>
+  `).join('');
+}
+
+function updateDropdownProduk() {
+  const sel = document.getElementById('jl-produk');
+  sel.innerHTML = '<option value="">— Pilih produk —</option>' +
+    produk.map(p => `<option value="${p.id}">${p.nama} (stok: ${p.stok})</option>`).join('');
+}
+
+// Auto-isi harga saat produk dipilih
+document.getElementById('jl-produk').addEventListener('change', function() {
+  const p = produk.find(x => x.id == this.value);
+  if (p) document.getElementById('jl-harga').value = p.harga;
+});
+
+// ===== PENJUALAN =====
+function tambahPenjualan() {
+  const pid = document.getElementById('jl-produk').value;
+  const qty = parseInt(document.getElementById('jl-qty').value) || 0;
+  const harga = parseInt(document.getElementById('jl-harga').value) || 0;
+  const channel = document.getElementById('jl-channel').value;
+  const tanggal = document.getElementById('jl-tanggal').value;
+  const catatan = document.getElementById('jl-catatan').value.trim();
+
+  if (!pid) return tampilNotif('notif-jual', '⚠️ Pilih produk dulu!', 'merah');
+  if (qty <= 0) return tampilNotif('notif-jual', '⚠️ Jumlah harus lebih dari 0!', 'merah');
+
+  const p = produk.find(x => x.id == pid);
+  if (!p) return;
+  if (p.stok < qty) return tampilNotif('notif-jual', `⚠️ Stok tidak cukup! Stok tersisa: ${p.stok}`, 'merah');
+
+  p.stok -= qty;
+  penjualan.push({ id: Date.now(), produkId: pid, nama: p.nama, qty, harga, total: qty * harga, channel, tanggal, catatan });
+  simpan();
+  renderProduk();
+  updateDropdownProduk();
+  renderJual();
+  tampilNotif('notif-jual', `✅ Penjualan dicatat! Stok ${p.nama} tersisa ${p.stok}`, 'hijau');
+
+  document.getElementById('jl-produk').value = '';
+  document.getElementById('jl-qty').value = 1;
+  document.getElementById('jl-harga').value = '';
+  document.getElementById('jl-catatan').value = '';
+}
+
+function hapusJual(id) {
+  const tr = penjualan.find(x => x.id === id);
+  if (!tr) return;
+  if (!confirm('Hapus transaksi ini? Stok akan dikembalikan.')) return;
+  const p = produk.find(x => x.id == tr.produkId);
+  if (p) p.stok += tr.qty;
+  penjualan = penjualan.filter(x => x.id !== id);
+  simpan();
+  renderProduk();
+  updateDropdownProduk();
+  renderJual();
+}
+
+function renderJual() {
+  const tbody = document.getElementById('tabel-jual');
+  if (!penjualan.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="kosong"><div class="ikon">🧾</div>Belum ada penjualan</td></tr>';
+    return;
+  }
+  const sorted = [...penjualan].reverse();
+  tbody.innerHTML = sorted.map(j => `
+    <tr>
+      <td><span class="info-tanggal">${j.tanggal || '-'}</span></td>
+      <td>${j.nama}</td>
+      <td><strong>${j.qty}</strong></td>
+      <td>${formatRp(j.total)}</td>
+      <td>${j.channel}</td>
+      <td><button class="tombol tombol-merah" style="padding:4px 10px;font-size:11px" onclick="hapusJual(${j.id})">🗑</button></td>
+    </tr>
+  `).join('');
+}
+
+// ===== LAPORAN =====
+function renderLaporan() {
+  const el = document.getElementById('konten-laporan');
+  if (!produk.length && !penjualan.length) {
+    el.innerHTML = '<div class="kosong" style="padding:60px 20px"><div class="ikon">📋</div><p>Tambah produk dan penjualan dulu,<br>lalu laporan otomatis muncul di sini.</p></div>';
+    return;
+  }
+
+  const totalOmset = penjualan.reduce((s, j) => s + j.total, 0);
+  const totalTerjual = penjualan.reduce((s, j) => s + j.qty, 0);
+  const totalTransaksi = penjualan.length;
+  const stokHabis = produk.filter(p => p.stok === 0).length;
+  const stokRendah = produk.filter(p => p.stok > 0 && p.stok <= p.min).length;
+
+  // Per produk
+  const perProduk = {};
+  penjualan.forEach(j => {
+    if (!perProduk[j.nama]) perProduk[j.nama] = { qty: 0, total: 0 };
+    perProduk[j.nama].qty += j.qty;
+    perProduk[j.nama].total += j.total;
+  });
+  const topProduk = Object.entries(perProduk).sort((a,b) => b[1].total - a[1].total);
+
+  // Per channel
+  const perChannel = {};
+  penjualan.forEach(j => {
+    if (!perChannel[j.channel]) perChannel[j.channel] = 0;
+    perChannel[j.channel] += j.total;
+  });
+  const topChannel = Object.entries(perChannel).sort((a,b) => b[1] - a[1]);
+
+  const sekarang = new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+
+  el.innerHTML = `
+    <div class="lap-header">
+      <h2>📊 Laporan Penjualan & Stok</h2>
+      <p>Dibuat: ${sekarang}</p>
+    </div>
+
+    <div class="grid-stat">
+      <div class="stat-box">
+        <div class="angka">${formatRp(totalOmset)}</div>
+        <div class="label">Total Omset</div>
+      </div>
+      <div class="stat-box">
+        <div class="angka">${totalTransaksi}</div>
+        <div class="label">Transaksi</div>
+      </div>
+      <div class="stat-box">
+        <div class="angka">${totalTerjual}</div>
+        <div class="label">Unit Terjual</div>
+      </div>
+      <div class="stat-box ${stokHabis > 0 ? 'merah' : ''}">
+        <div class="angka">${stokHabis}</div>
+        <div class="label">Stok Habis ⚠️</div>
+      </div>
+    </div>
+
+    ${topProduk.length ? `
+    <div class="lap-seksi">
+      <div class="lap-seksi-judul">🏆 Penjualan per Produk</div>
+      ${topProduk.map(([nama, d]) => `
+        <div class="lap-baris">
+          <span class="nama">${nama}</span>
+          <span class="nilai">${formatRp(d.total)} <span style="font-size:11px;color:var(--abu)">(${d.qty} unit)</span></span>
+        </div>
+      `).join('')}
+      <div class="lap-total">
+        <span>Total Omset</span>
+        <span class="nilai">${formatRp(totalOmset)}</span>
+      </div>
+    </div>` : ''}
+
+    ${topChannel.length ? `
+    <div class="lap-seksi">
+      <div class="lap-seksi-judul">📱 Omset per Channel</div>
+      ${topChannel.map(([ch, total]) => `
+        <div class="lap-baris">
+          <span class="nama">${ch}</span>
+          <span class="nilai">${formatRp(total)}</span>
+        </div>
+      `).join('')}
+    </div>` : ''}
+
+    <div class="lap-seksi">
+      <div class="lap-seksi-judul">📦 Kondisi Stok</div>
+      ${produk.map(p => `
+        <div class="lap-baris">
+          <span class="nama">${p.nama}</span>
+          <span class="nilai">${p.stok} unit ${statusStok(p)}</span>
+        </div>
+      `).join('')}
+    </div>
+
+    ${stokRendah + stokHabis > 0 ? `
+    <div class="lap-seksi" style="border:2px solid #fbbf24">
+      <div class="lap-seksi-judul" style="color:#92400e">⚠️ Perlu Perhatian</div>
+      ${produk.filter(p => p.stok <= p.min).map(p => `
+        <div class="lap-baris">
+          <span class="nama">${p.nama}</span>
+          <span style="color:${p.stok===0?'var(--merah)':'#d97706'};font-weight:700;font-size:12px">${p.stok === 0 ? 'HABIS — Segera restock!' : `Sisa ${p.stok} — Hampir habis`}</span>
+        </div>
+      `).join('')}
+    </div>` : ''}
+
+    <button class="tombol tombol-abu" style="width:100%;justify-content:center;margin-top:8px" onclick="resetData()">🗑️ Reset Semua Data</button>
+  `;
+}
+
+function resetData() {
+  if (!confirm('Reset semua data produk & penjualan? Tidak bisa dikembalikan!')) return;
+  produk = []; penjualan = []; simpan();
+  renderProduk(); renderJual(); updateDropdownProduk(); renderLaporan();
+}
+
+// Init
+renderProduk();
+renderJual();
+updateDropdownProduk();
+</script>
+</body>
+</html>
