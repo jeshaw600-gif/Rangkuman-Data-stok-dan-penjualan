@@ -275,6 +275,38 @@
 
   .aksi-btn { display: flex; gap: 6px; }
 
+  /* MODAL EDIT */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.aktif { display: flex; }
+  .modal {
+    background: var(--putih);
+    border-radius: 16px;
+    padding: 24px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .modal-judul {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--hijau-gelap);
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--hijau-muda);
+  }
+  .modal-aksi { display: flex; gap: 8px; margin-top: 16px; }
+  .tombol-biru { background: #3b82f6; color: white; flex: 1; justify-content: center; }
+  .tombol-biru:hover { background: #2563eb; }
+
   .info-tanggal {
     font-size: 11px;
     color: var(--abu);
@@ -292,8 +324,42 @@
   </div>
 </header>
 
-<div class="kontainer">
+<!-- MODAL EDIT PRODUK -->
+<div id="modal-edit" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-judul">✏️ Edit Produk</div>
+    <div class="baris-form">
+      <div class="grup-input">
+        <label>Nama Produk</label>
+        <input type="text" id="edit-nama">
+      </div>
+      <div class="grup-input">
+        <label>Kode / SKU</label>
+        <input type="text" id="edit-kode">
+      </div>
+    </div>
+    <div class="baris-form tiga">
+      <div class="grup-input">
+        <label>Stok</label>
+        <input type="number" id="edit-stok" min="0">
+      </div>
+      <div class="grup-input">
+        <label>Harga Jual (Rp)</label>
+        <input type="number" id="edit-harga" min="0">
+      </div>
+      <div class="grup-input">
+        <label>Min. Stok Aman</label>
+        <input type="number" id="edit-min" min="0">
+      </div>
+    </div>
+    <div class="modal-aksi">
+      <button class="tombol tombol-abu" style="flex:1;justify-content:center" onclick="tutupModal()">Batal</button>
+      <button class="tombol tombol-biru" onclick="simpanEdit()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
 
+<div class="kontainer">
   <div class="tab-nav">
     <button class="tab-btn aktif" onclick="ganti('produk')">📦 Produk & Stok</button>
     <button class="tab-btn" onclick="ganti('penjualan')">🧾 Penjualan</button>
@@ -484,6 +550,41 @@ function tambahProduk() {
   ['np-nama','np-kode','np-stok','np-harga','np-min'].forEach(id => document.getElementById(id).value = '');
 }
 
+function bukaEdit(id) {
+  const p = produk.find(x => x.id === id);
+  if (!p) return;
+  window._editId = id;
+  document.getElementById('edit-nama').value = p.nama;
+  document.getElementById('edit-kode').value = p.kode || '';
+  document.getElementById('edit-stok').value = p.stok;
+  document.getElementById('edit-harga').value = p.harga;
+  document.getElementById('edit-min').value = p.min;
+  document.getElementById('modal-edit').classList.add('aktif');
+}
+
+function tutupModal() {
+  document.getElementById('modal-edit').classList.remove('aktif');
+}
+
+function simpanEdit() {
+  const p = produk.find(x => x.id === window._editId);
+  if (!p) return;
+  p.nama = document.getElementById('edit-nama').value.trim() || p.nama;
+  p.kode = document.getElementById('edit-kode').value.trim();
+  p.stok = parseInt(document.getElementById('edit-stok').value) || 0;
+  p.harga = parseInt(document.getElementById('edit-harga').value) || 0;
+  p.min = parseInt(document.getElementById('edit-min').value) || 5;
+  simpan();
+  renderProduk();
+  updateDropdownProduk();
+  tutupModal();
+}
+
+// Tutup modal kalau tap di luar
+document.getElementById('modal-edit').addEventListener('click', function(e) {
+  if (e.target === this) tutupModal();
+});
+
 function hapusProduk(id) {
   if (!confirm('Hapus produk ini?')) return;
   produk = produk.filter(p => p.id !== id);
@@ -510,7 +611,12 @@ function renderProduk() {
       <td><strong>${p.stok}</strong></td>
       <td>${formatRp(p.harga)}</td>
       <td>${statusStok(p)}</td>
-      <td><button class="tombol tombol-merah" style="padding:4px 10px;font-size:11px" onclick="hapusProduk(${p.id})">🗑</button></td>
+      <td>
+        <div class="aksi-btn">
+          <button class="tombol tombol-biru" style="padding:4px 10px;font-size:11px" onclick="bukaEdit(${p.id})">✏️</button>
+          <button class="tombol tombol-merah" style="padding:4px 10px;font-size:11px" onclick="hapusProduk(${p.id})">🗑</button>
+        </div>
+      </td>
     </tr>
   `).join('');
 }
